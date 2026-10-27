@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Result</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="container">
+    <div class="card">
+      <h2>Your Result</h2>
+      <h3 id="score"></h3>
+      <a href="quiz.html"><button>Try Again</button></a>
+      <a href="leaderboard.html"><button>Leaderboard</button></a>
+    </div>
+    <div id="details"></div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    requireLogin();
+    loadNavbar();
+
+    const result = JSON.parse(sessionStorage.getItem("result"));
+    if (!result) {
+      window.location.href = "quiz.html";
+    } else {
+      document.getElementById("score").textContent =
+        `Score: ${result.score} / ${result.total}`;
+
+      document.getElementById("details").innerHTML = result.details
+        .map((d, i) => `
+          <div class="card ${d.isCorrect ? "right" : "wrong"}">
+            <p><b>Q${i + 1}. ${d.questionText}</b></p>
+            <p>Your answer: ${d.options[d.selected]}</p>
+            ${d.isCorrect ? "" : `<p>Correct answer: ${d.options[d.correctIndex]}</p>`}
+            <p><i>${d.explanation || ""}</i></p>
+          </div>`)
+        .join("");
+    }
+  </script>
+</body>
+</html>

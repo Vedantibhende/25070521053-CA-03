@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quiz</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="container">
+    <div class="card" id="setup">
+      <h2>Choose a Quiz</h2>
+      <select id="topic">
+        <option value="phishing">Phishing</option>
+        <option value="password">Passwords</option>
+        <option value="malware">Malware</option>
+      </select>
+      <select id="level">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button onclick="startQuiz()">Start</button>
+      <p id="msg" class="error"></p>
+    </div>
+
+    <div class="card" id="quizBox" style="display:none">
+      <p id="counter"></p>
+      <h3 id="questionText"></h3>
+      <div id="options"></div>
+      <button onclick="nextQuestion()">Next</button>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    requireLogin();
+    loadNavbar();
+
+    let questions = [], current = 0, answers = [], selected = null;
+
+    async function startQuiz() {
+      const topic = document.getElementById("topic").value;
+      const level = document.getElementById("level").value;
+      try {
+        questions = await apiFetch(`/questions?topic=${topic}&level=${level}`);
+        if (questions.length === 0) {
+          document.getElementById("msg").textContent = "No questions found for this choice.";
+          return;
+        }
+        sessionStorage.setItem("quizInfo", JSON.stringify({ topic, level }));
+        document.getElementById("setup").style.display = "none";
+        document.getElementById("quizBox").style.display = "block";
+        showQuestion();
+      } catch (err) {
+        document.getElementById("msg").textContent = err.message;
+      }
+    }
+
+    function showQuestion() {
+      const q = questions[current];
+      selected = null;
+      document.getElementById("counter").textContent =
+        `Question ${current + 1} of ${questions.length}`;
+      document.getElementById("questionText").textContent = q.questionText;
+      document.getElementById("options").innerHTML = q.options
+        .map((opt, i) =>
+          `<label class="option"><input type="radio" name="opt" onclick="selected=${i}">${opt}</label>`)
+        .join("");
+    }
+
+    async function nextQuestion() {
+      if (selected === null) return alert("Please select an answer");
+      answers.push({ question: questions[current]._id, selected });
+      current++;
+      if (current < questions.length) return showQuestion();
+
+      const info = JSON.parse(sessionStorage.getItem("quizInfo"));
+      try {
+        const result = await apiFetch("/attempts", {
+          method: "POST",
+          body: JSON.stringify({ ...info, answers }),
+        });
+        sessionStorage.setItem("result", JSON.stringify(result));
+        window.location.href = "result.html";
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+  </script>
+</body>
+</html>

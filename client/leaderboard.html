@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaderboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="container">
+    <div class="card">
+      <h2>🏆 Leaderboard</h2>
+      <table>
+        <thead><tr><th>Rank</th><th>Name</th><th>Points</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    requireLogin();
+    loadNavbar();
+
+    async function load() {
+      const users = await apiFetch("/leaderboard");
+      document.getElementById("rows").innerHTML = users
+        .map((u, i) => `<tr><td>${i + 1}</td><td>${u.name}</td><td>${u.totalScore}</td></tr>`)
+        .join("");
+    }
+    load();
+  </script>
+</body>
+</html>

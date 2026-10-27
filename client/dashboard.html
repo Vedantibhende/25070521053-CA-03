@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="navbar"></div>
+  <div class="container">
+    <div class="card">
+      <h2 id="welcome"></h2>
+      <p id="stats"></p>
+    </div>
+    <div class="card">
+      <h3>Your Attempts</h3>
+      <table>
+        <thead><tr><th>Topic</th><th>Level</th><th>Score</th><th>Date</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/common.js"></script>
+  <script>
+    requireLogin();
+    loadNavbar();
+
+    async function load() {
+      const user = getUser();
+      document.getElementById("welcome").textContent = "Hello, " + user.name;
+      try {
+        const attempts = await apiFetch("/attempts/my");
+        const total = attempts.reduce((sum, a) => sum + a.score, 0);
+        document.getElementById("stats").textContent =
+          `Quizzes taken: ${attempts.length} | Total points: ${total}`;
+
+        document.getElementById("rows").innerHTML = attempts
+          .map(a => `<tr>
+            <td>${a.topic}</td><td>${a.level}</td>
+            <td>${a.score}/${a.totalQuestions}</td>
+            <td>${new Date(a.createdAt).toLocaleDateString()}</td>
+          </tr>`).join("");
+      } catch (err) {
+        document.getElementById("stats").textContent = err.message;
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
